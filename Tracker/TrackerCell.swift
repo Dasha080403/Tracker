@@ -20,7 +20,6 @@ final class TrackerCell: UICollectionViewCell {
     private var trackerId: UUID?
     private var indexPath: IndexPath?
     
-    // Верхняя цветная часть (высота 90)
     private let cardView: UIView = {
         let view = UIView()
         view.layer.cornerRadius = 16
@@ -28,7 +27,6 @@ final class TrackerCell: UICollectionViewCell {
         return view
     }()
     
-    // Эмодзи
     private let emojiLabel: UILabel = {
         let label = UILabel()
         label.backgroundColor = .white.withAlphaComponent(0.3)
@@ -40,7 +38,6 @@ final class TrackerCell: UICollectionViewCell {
         return label
     }()
     
-    // Название привычки (Задача 1: 143х34 внизу ячейки)
     private let titleLabel: UILabel = {
         let label = UILabel()
         label.textColor = .white
@@ -50,7 +47,6 @@ final class TrackerCell: UICollectionViewCell {
         return label
     }()
     
-    // Нижняя часть (Задача 2: Прямоугольник 167х58 со счетчиком и кнопкой)
     private let managementView: UIView = {
         let view = UIView()
         view.translatesAutoresizingMaskIntoConstraints = false
@@ -67,7 +63,7 @@ final class TrackerCell: UICollectionViewCell {
     
     private let plusButton: UIButton = {
         let button = UIButton(type: .system)
-        button.layer.cornerRadius = 17 // половина от 34
+        button.layer.cornerRadius = 17
         button.tintColor = .white
         button.addTarget(self, action: #selector(plusButtonTapped), for: .touchUpInside)
         button.translatesAutoresizingMaskIntoConstraints = false
@@ -96,38 +92,33 @@ final class TrackerCell: UICollectionViewCell {
     
     private func setupConstraints() {
         NSLayoutConstraint.activate([
-            // Карточка (верх)
+          
             cardView.topAnchor.constraint(equalTo: contentView.topAnchor),
             cardView.leadingAnchor.constraint(equalTo: contentView.leadingAnchor),
             cardView.trailingAnchor.constraint(equalTo: contentView.trailingAnchor),
             cardView.heightAnchor.constraint(equalToConstant: 90),
             
-            // Эмодзи
             emojiLabel.topAnchor.constraint(equalTo: cardView.topAnchor, constant: 12),
             emojiLabel.leadingAnchor.constraint(equalTo: cardView.leadingAnchor, constant: 12),
             emojiLabel.widthAnchor.constraint(equalToConstant: 24),
             emojiLabel.heightAnchor.constraint(equalToConstant: 24),
             
-            // Название (Размер 143х34, внизу cardView)
             titleLabel.leadingAnchor.constraint(equalTo: cardView.leadingAnchor, constant: 12),
             titleLabel.trailingAnchor.constraint(equalTo: cardView.trailingAnchor, constant: -12),
             titleLabel.bottomAnchor.constraint(equalTo: cardView.bottomAnchor, constant: -12),
             titleLabel.widthAnchor.constraint(equalToConstant: 143),
             titleLabel.heightAnchor.constraint(equalToConstant: 34),
             
-            // Нижний прямоугольник (Размер 167х58)
             managementView.topAnchor.constraint(equalTo: cardView.bottomAnchor),
             managementView.leadingAnchor.constraint(equalTo: contentView.leadingAnchor),
             managementView.trailingAnchor.constraint(equalTo: contentView.trailingAnchor),
             managementView.heightAnchor.constraint(equalToConstant: 58),
             
-            // Счетчик дней (Размер 101х18)
             daysLabel.leadingAnchor.constraint(equalTo: managementView.leadingAnchor, constant: 12),
             daysLabel.topAnchor.constraint(equalTo: managementView.topAnchor, constant: 16),
             daysLabel.widthAnchor.constraint(equalToConstant: 101),
             daysLabel.heightAnchor.constraint(equalToConstant: 18),
             
-            // Кнопка плюс (Размер 34х34)
             plusButton.trailingAnchor.constraint(equalTo: managementView.trailingAnchor, constant: -12),
             plusButton.topAnchor.constraint(equalTo: managementView.topAnchor, constant: 8),
             plusButton.widthAnchor.constraint(equalToConstant: 34),
@@ -135,7 +126,7 @@ final class TrackerCell: UICollectionViewCell {
         ])
     }
     
-    func configure(with tracker: Tracker, isCompletedToday: Bool, completedDays: Int, indexPath: IndexPath) {
+    func configure(with tracker: Models.Tracker, isCompletedToday: Bool, completedDays: Int, indexPath: IndexPath) {
         self.trackerId = tracker.id
         self.isCompletedToday = isCompletedToday
         self.indexPath = indexPath
@@ -145,7 +136,6 @@ final class TrackerCell: UICollectionViewCell {
         cardView.backgroundColor = tracker.color
         plusButton.backgroundColor = tracker.color
         
-        // Склонение слова "день"
         daysLabel.text = formatDays(completedDays)
         
         let image = isCompletedToday ? UIImage(systemName: "checkmark") : UIImage(systemName: "plus")

@@ -8,12 +8,12 @@
 import UIKit
 
 protocol ScheduleViewControllerDelegate: AnyObject {
-    func didSelectDays(_ days: [WeekDay])
+    func didSelectDays(_ days: [Models.WeekDay])
 }
 
 final class ScheduleViewController: UIViewController {
     weak var delegate: ScheduleViewControllerDelegate?
-    private var selectedDays: Set<WeekDay> = []
+    private var selectedDays: Set<Models.WeekDay> = []
     
     private let tableView = UITableView()
     private let doneButton: UIButton = {
@@ -66,7 +66,7 @@ final class ScheduleViewController: UIViewController {
     }
     
     @objc private func doneTap() {
-        let sortedDays = WeekDay.allCases.filter { selectedDays.contains($0) }
+        let sortedDays = Models.WeekDay.allCases.filter { selectedDays.contains($0) }
         delegate?.didSelectDays(sortedDays)
         dismiss(animated: true)
     }
@@ -74,12 +74,12 @@ final class ScheduleViewController: UIViewController {
 
 extension ScheduleViewController: UITableViewDataSource, UITableViewDelegate {
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        return WeekDay.allCases.count
+        return Models.WeekDay.allCases.count
     }
     
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         let cell = UITableViewCell(style: .default, reuseIdentifier: "cell")
-        let day = WeekDay.allCases[indexPath.row]
+        let day = Models.WeekDay.allCases[indexPath.row]
         cell.textLabel?.text = day.rawValue
         cell.backgroundColor = UIColor(red: 0.9, green: 0.9, blue: 0.9, alpha: 0.3)
         
@@ -93,7 +93,7 @@ extension ScheduleViewController: UITableViewDataSource, UITableViewDelegate {
     }
     
     @objc private func switchChanged(_ sender: UISwitch) {
-        let day = WeekDay.allCases[sender.tag]
+        let day = Models.WeekDay.allCases[sender.tag]
         if sender.isOn {
             selectedDays.insert(day)
         } else {

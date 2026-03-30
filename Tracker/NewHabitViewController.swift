@@ -1,23 +1,29 @@
-//
-//  NewHabitViewController.swift
-//  Tracker
-//
-//  Created by Дарья Савинкина on 22.03.2026.
-//
-
 import UIKit
 
 protocol NewHabitViewControllerDelegate: AnyObject {
-    func didCreateTracker(_ tracker: Tracker, categoryName: String)
+    func didCreateTracker(_ tracker: Models.Tracker, categoryName: String)
 }
 
 final class NewHabitViewController: UIViewController {
     
-    // MARK: - Properties
     weak var delegate: NewHabitViewControllerDelegate?
-    private var selectedSchedule: [WeekDay] = []
+    private let emojis = Models.TrackerResources.emojis
+    private let colors = Models.TrackerResources.colors
+    private var selectedSchedule: [Models.WeekDay] = []
+    private var selectedEmoji: String?
+    private var selectedColor: UIColor?
     
-    // MARK: - UI Elements
+    private let collectionView: UICollectionView = {
+        let layout = UICollectionViewFlowLayout()
+        layout.minimumLineSpacing = 0
+        layout.minimumInteritemSpacing = 0
+        let collection = UICollectionView(frame: .zero, collectionViewLayout: layout)
+        collection.backgroundColor = .clear
+        collection.isScrollEnabled = false
+        collection.translatesAutoresizingMaskIntoConstraints = false
+        return collection
+    }()
+    
     private let scrollView: UIScrollView = {
         let scroll = UIScrollView()
         scroll.translatesAutoresizingMaskIntoConstraints = false
@@ -89,43 +95,51 @@ final class NewHabitViewController: UIViewController {
     private let createButton: UIButton = {
         let btn = UIButton(type: .system)
         btn.setTitle("Создать", for: .normal)
-        btn.backgroundColor = .gray // Изначально неактивна
+        btn.backgroundColor = .gray
         btn.setTitleColor(.white, for: .normal)
         btn.layer.cornerRadius = 16
         btn.isEnabled = false
         return btn
     }()
     
-    // MARK: - Lifecycle
     override func viewDidLoad() {
         super.viewDidLoad()
         view.backgroundColor = .white
         title = "Новая привычка"
         
+        setupCollectionView()
         setupUI()
         setupActions()
         textField.delegate = self
     }
     
-    // MARK: - Setup Methods
+    private func setupCollectionView() {
+        collectionView.delegate = self
+        collectionView.dataSource = self
+        collectionView.register(EmojiCell.self, forCellWithReuseIdentifier: EmojiCell.identifier)
+        collectionView.register(ColorCell.self, forCellWithReuseIdentifier: ColorCell.identifier)
+    }
+    
     private func setupUI() {
         view.addSubview(scrollView)
         scrollView.addSubview(contentView)
         
-        [textField, limitLabel, stackView, buttonsStackView].forEach {
+        [textField, limitLabel, stackView, collectionView, buttonsStackView].forEach {
             contentView.addSubview($0)
         }
         
         stackView.addArrangedSubview(categoryButton)
         
-        // Разделительная линия между кнопками
         let separator = UIView()
         separator.backgroundColor = .lightGray
         separator.translatesAutoresizingMaskIntoConstraints = false
         stackView.addArrangedSubview(separator)
-        NSLayoutConstraint.activate([separator.heightAnchor.constraint(equalToConstant: 0.5),
-                                     separator.leadingAnchor.constraint(equalTo: stackView.leadingAnchor, constant: 16),
-                                     separator.trailingAnchor.constraint(equalTo: stackView.trailingAnchor, constant: -16)])
+        
+        NSLayoutConstraint.activate([
+            separator.heightAnchor.constraint(equalToConstant: 0.5),
+            separator.leadingAnchor.constraint(equalTo: stackView.leadingAnchor, constant: 16),
+            separator.trailingAnchor.constraint(equalTo: stackView.trailingAnchor, constant: -16)
+        ])
         
         stackView.addArrangedSubview(scheduleButton)
         
@@ -160,7 +174,12 @@ final class NewHabitViewController: UIViewController {
             categoryButton.heightAnchor.constraint(equalToConstant: 75),
             scheduleButton.heightAnchor.constraint(equalToConstant: 75),
             
-            buttonsStackView.topAnchor.constraint(equalTo: stackView.bottomAnchor, constant: 40),
+            collectionView.topAnchor.constraint(equalTo: stackView.bottomAnchor, constant: 32),
+            collectionView.leadingAnchor.constraint(equalTo: contentView.leadingAnchor),
+            collectionView.trailingAnchor.constraint(equalTo: contentView.trailingAnchor),
+            collectionView.heightAnchor.constraint(equalToConstant: 480),
+            
+            buttonsStackView.topAnchor.constraint(equalTo: collectionView.bottomAnchor, constant: 16),
             buttonsStackView.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 20),
             buttonsStackView.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -20),
             buttonsStackView.heightAnchor.constraint(equalToConstant: 60),
@@ -207,8 +226,10 @@ final class NewHabitViewController: UIViewController {
     private func checkFullness() {
         let isTextNotEmpty = !(textField.text?.isEmpty ?? true)
         let isScheduleNotEmpty = !selectedSchedule.isEmpty
+        let isEmojiSelected = selectedEmoji != nil
+        let isColorSelected = selectedColor != nil
         
-        if isTextNotEmpty && isScheduleNotEmpty {
+        if isTextNotEmpty && isScheduleNotEmpty && isEmojiSelected && isColorSelected {
             createButton.isEnabled = true
             createButton.backgroundColor = .black
         } else {
@@ -217,15 +238,16 @@ final class NewHabitViewController: UIViewController {
         }
     }
     
-    // MARK: - Actions
     @objc private func didTapCreateButton() {
-        guard let text = textField.text, !text.isEmpty else { return }
+        guard let text = textField.text, !text.isEmpty,
+              let color = selectedColor,
+              let emoji = selectedEmoji else { return }
         
-        let newTracker = Tracker(
+        let newTracker = Models.Tracker(
             id: UUID(),
             name: text,
-            color: .systemBlue, // Здесь можно добавить выбор цвета позже
-            emoji: "❤️",         // Здесь можно добавить выбор эмодзи позже
+            color: color,
+            emoji: emoji,
             schedule: selectedSchedule
         )
         
@@ -244,9 +266,8 @@ final class NewHabitViewController: UIViewController {
     }
 }
 
-// MARK: - ScheduleViewControllerDelegate
 extension NewHabitViewController: ScheduleViewControllerDelegate {
-    func didSelectDays(_ days: [WeekDay]) {
+    func didSelectDays(_ days: [Models.WeekDay]) {
         self.selectedSchedule = days
         let subtitleLabel = scheduleButton.viewWithTag(100) as? UILabel
         
@@ -260,7 +281,6 @@ extension NewHabitViewController: ScheduleViewControllerDelegate {
     }
 }
 
-// MARK: - UITextFieldDelegate
 extension NewHabitViewController: UITextFieldDelegate {
     func textField(_ textField: UITextField, shouldChangeCharactersIn range: NSRange, replacementString string: String) -> Bool {
         let currentText = textField.text ?? ""
@@ -270,7 +290,6 @@ extension NewHabitViewController: UITextFieldDelegate {
         let isOverLimit = updatedText.count > 38
         limitLabel.isHidden = !isOverLimit
         
-        // После изменения текста проверяем заполненность всех полей
         DispatchQueue.main.async {
             self.checkFullness()
         }
@@ -283,3 +302,50 @@ extension NewHabitViewController: UITextFieldDelegate {
         return true
     }
 }
+
+extension NewHabitViewController: UICollectionViewDataSource, UICollectionViewDelegateFlowLayout {
+    func numberOfSections(in collectionView: UICollectionView) -> Int {
+        return 2
+    }
+
+    func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
+        return section == 0 ? emojis.count : colors.count
+    }
+
+    func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
+        if indexPath.section == 0 {
+            guard let cell = collectionView.dequeueReusableCell(withReuseIdentifier: EmojiCell.identifier, for: indexPath) as? EmojiCell else { return UICollectionViewCell() }
+            let emoji = emojis[indexPath.row]
+            cell.titleLabel.text = emoji
+            cell.setSelected(emoji == selectedEmoji)
+            return cell
+        } else {
+            guard let cell = collectionView.dequeueReusableCell(withReuseIdentifier: ColorCell.identifier, for: indexPath) as? ColorCell else { return UICollectionViewCell() }
+            let color = colors[indexPath.row]
+            cell.configure(color: color)
+            cell.setSelected(color == selectedColor, color: color)
+            return cell
+        }
+    }
+
+    func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, sizeForItemAt indexPath: IndexPath) -> CGSize {
+        let side = (collectionView.frame.width - 36) / 6
+        return CGSize(width: side, height: side)
+    }
+    
+    func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, insetForSectionAt section: Int) -> UIEdgeInsets {
+        return UIEdgeInsets(top: 24, left: 18, bottom: 24, right: 18)
+    }
+
+    func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
+        if indexPath.section == 0 {
+            selectedEmoji = emojis[indexPath.row]
+        } else {
+            selectedColor = colors[indexPath.row]
+        }
+        collectionView.reloadSections(IndexSet(integer: indexPath.section))
+        checkFullness()
+    }
+}
+
+

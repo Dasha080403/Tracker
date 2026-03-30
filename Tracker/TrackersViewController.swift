@@ -8,9 +8,9 @@ import UIKit
 
 final class TrackersViewController: UIViewController {
     
-    private var categories: [TrackerCategory] = []
-    private var visibleCategories: [TrackerCategory] = []
-    private var completedTrackers: [TrackerRecord] = []
+    private var categories: [Models.TrackerCategory] = []
+    private var visibleCategories: [Models.TrackerCategory] = []
+    private var completedTrackers: [Models.TrackerRecord] = []
     private var currentDate: Date = Date()
     
     private let contentView = TrackersView()
@@ -81,13 +81,13 @@ final class TrackersViewController: UIViewController {
             let trackers = category.trackers.filter { tracker in
                 guard let schedule = tracker.schedule else { return true }
                 
-                return schedule.contains { (weekDay: WeekDay) in
+                return schedule.contains { (weekDay: Models.WeekDay) in
                     return weekDay.calendarDayNumber == filterWeekday
                 }
             }
             
             if trackers.isEmpty { return nil }
-            return TrackerCategory(title: category.title, trackers: trackers)
+            return Models.TrackerCategory(title: category.title, trackers: trackers)
         }
         
         contentView.collectionView.reloadData()
@@ -147,14 +147,14 @@ final class TrackersViewController: UIViewController {
     
     extension TrackersViewController: NewHabitViewControllerDelegate {
         
-        func didCreateTracker(_ tracker: Tracker, categoryName: String) {
+        func didCreateTracker(_ tracker: Models.Tracker, categoryName: String) {
             if let index = categories.firstIndex(where: { $0.title == categoryName }) {
                 var trackers = categories[index].trackers
                 trackers.append(tracker)
-                let updatedCategory = TrackerCategory(title: categoryName, trackers: trackers)
+                let updatedCategory = Models.TrackerCategory(title: categoryName, trackers: trackers)
                 categories[index] = updatedCategory
             } else {
-                let newCategory = TrackerCategory(title: categoryName, trackers: [tracker])
+                let newCategory = Models.TrackerCategory(title: categoryName, trackers: [tracker])
                 categories.append(newCategory)
             }
             
@@ -168,7 +168,7 @@ extension TrackersViewController: TrackerCellDelegate {
     func completeTracker(id: UUID, at indexPath: IndexPath) {
         if currentDate > Date() { return }
 
-                let trackerRecord = TrackerRecord(trackerId: id, date: currentDate)
+        let trackerRecord = Models.TrackerRecord(trackerId: id, date: currentDate)
                 completedTrackers.append(trackerRecord)
                 
                 contentView.collectionView.reloadItems(at: [indexPath])
